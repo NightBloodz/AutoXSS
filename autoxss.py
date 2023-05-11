@@ -9,12 +9,15 @@ parser.add_argument("-t", "--target", type=str, help="Url to attack, the word FU
 parser.add_argument("-d", "--data", type=str, help="Data of the petitions, the word FUZZ will be replaced with the payloads", default=False, required=False)
 parser.add_argument("-H", "--headers", type=str, help="Use headers with this format 'HEADER:value'", required=False, default=False)
 parser.add_argument("--pathstocheck", type=str, help="Paths to check reflections, useful for stored XSS", required=False, default=False)
+parser.add_argument("--browsers", type=int, help="Number of browsers running simultaneously", required=False, default=1)
 
 args = parser.parse_args()
 
 #Check args
 verbose = args.verbose
 paths2check = args.pathstocheck
+headers = args.headers
+max_browsers = args.browsers
 
 data = args.data
 if data:
@@ -32,32 +35,39 @@ if not data and "FUZZ" not in target:
     sys.exit(1)
 
 
-if args.headers:
+if headers:
     headers = {}
     for header in args.headers:
         headers[header.split(":")[0]] = header.split(":")[1]
         
         
-     
-
-
-
-
-
-browsers = BrowserPool(10, headers)
-
+    
+browsers = BrowserPool(max_browsers, headers)
 
 if __name__ == "__main__":
-    print("Checking reflection on "+target)
+    reflection = "xxxaaaxxxyyyzzz"
+    print("Reflection = "+reflection)
+    print()
+    print()
     
     #Create the reflect payload
-    reflect_url = target.replace("FUZZ", "xxxaaaxxxyyyzzz")
+    reflect_url = target.replace("FUZZ", reflection)
+    print("Checking reflection on "+reflect_url)
+    
+    
     
     #Do the petition
     if data:
-        content = browsers.petition(reflect_url, data=data)
+        payload = data.replace("FUZZ", reflection)
+        content = requests.post(reflect_url, data=payload, headers=headers).text
+        print("Data ----> "+payload)
     else:
         content = browsers.petition(reflect_url)
+        
+
+    #Check reflections
+    if paths2check:
+        
         
     
     
